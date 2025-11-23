@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>아이젠하워 매트릭스</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      font-family: "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --bg-page: #f5f6f8;
+      --surface: rgba(255, 255, 255, 0.96);
+      --surface-muted: rgba(255, 255, 255, 0.88);
+      --ink-primary: #111827;
+      --ink-muted: rgba(17, 24, 39, 0.72);
+      --border-subtle: rgba(15, 23, 42, 0.12);
+      --border-strong: rgba(37, 99, 235, 0.32);
+      --accent: #2563eb;
+      --accent-soft: rgba(37, 99, 235, 0.12);
+      --radius-lg: 18px;
+      --radius-pill: 999px;
+      --shadow-sm: 0 6px 18px rgba(15, 23, 42, 0.08);
+      --shadow-md: 0 16px 32px rgba(15, 23, 42, 0.12);
+      --space-xs: 0.5rem;
+      --space-sm: 0.75rem;
+      --space-md: 1.25rem;
+      --space-lg: 2rem;
+      background-color: var(--bg-page);
+      color: var(--ink-primary);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: var(--space-lg) var(--space-sm) calc(var(--space-lg) * 1.5);
+      background: radial-gradient(circle at top, rgba(125, 211, 252, 0.18), transparent 55%), var(--bg-page);
+    }
+
+    .page {
+      width: min(960px, 100%);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+    }
+
+    header.hero {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 4vw, 2.8rem);
+      letter-spacing: 0.04em;
+    }
+
+    .matrix-intro {
+      margin: 0 auto;
+      max-width: 65ch;
+      font-size: 1.05rem;
+      line-height: 1.65;
+      color: var(--ink-muted);
+    }
+
+    form#task-form {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      padding: var(--space-md);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .field-row {
+      display: flex;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
+    }
+
+    .details-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: var(--space-sm);
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      font-size: 0.92rem;
+      color: var(--ink-muted);
+    }
+
+    .input-group select,
+    .input-group input[type="date"] {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      background: #fff;
+      color: var(--ink-primary);
+      font-size: 0.95rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .input-group textarea {
+      resize: vertical;
+      min-height: 96px;
+      padding: 0.75rem;
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: var(--ink-primary);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .input-group select:focus,
+    .input-group input[type="date"]:focus,
+    .input-group textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+
+    #task-input {
+      flex: 1 1 260px;
+      padding: 0.85rem 1rem;
+      font-size: 1rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-subtle);
+      background-color: #fff;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      color: var(--ink-primary);
+      caret-color: var(--accent);
+    }
+
+    #task-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+      outline: none;
+    }
+
+    button[type="submit"] {
+      flex: 0 0 auto;
+      padding: 0.85rem 1.8rem;
+      border-radius: var(--radius-pill);
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    }
+
+    button[type="submit"]:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 20px rgba(37, 99, 235, 0.28);
+    }
+
+    button[type="submit"]:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    fieldset.field-group {
+      margin: 0;
+      border: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      align-items: center;
+      background: rgba(148, 163, 184, 0.08);
+      padding: var(--space-sm);
+      border-radius: 14px;
+    }
+
+    fieldset.field-group legend {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--ink-muted);
+      padding-right: 0.35rem;
+    }
+
+    .checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: var(--radius-pill);
+      background: rgba(37, 99, 235, 0.08);
+      border: 1px solid rgba(37, 99, 235, 0.14);
+      font-size: 0.95rem;
+    }
+
+    .checkbox input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+    }
+
+    .matrix-tools {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-subtle);
+      padding: var(--space-md);
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      gap: var(--space-sm);
+    }
+
+    .matrix-tools h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--ink-muted);
+    }
+
+    .legend {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: var(--space-xs);
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .legend-item {
+      display: flex;
+      gap: 0.65rem;
+      align-items: flex-start;
+      padding: 0.65rem 0.75rem;
+      border-radius: 12px;
+      background: rgba(148, 163, 184, 0.14);
+      border: 1px solid rgba(148, 163, 184, 0.34);
+    }
+
+    .legend-swatch {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 0.15rem;
+    }
+
+    .legend-text {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .legend-text strong {
+      font-size: 0.95rem;
+    }
+
+    .completed-section {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-sm);
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .completed-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .completed-header h2 {
+      margin: 0;
+      font-size: 1.15rem;
+    }
+
+    .clear-completed {
+      padding: 0.45rem 0.9rem;
+      font-size: 0.9rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(239, 68, 68, 0.28);
+      background: rgba(239, 68, 68, 0.12);
+      color: rgba(153, 27, 27, 0.92);
+      cursor: pointer;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .clear-completed:hover {
+      background: rgba(239, 68, 68, 0.18);
+      border-color: rgba(239, 68, 68, 0.42);
+    }
+
+    .clear-completed:focus-visible {
+      outline: 2px solid rgba(239, 68, 68, 0.58);
+      outline-offset: 2px;
+    }
+
+    .clear-completed:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background: rgba(239, 68, 68, 0.08);
+    }
+
+    main.matrix-container {
+      display: grid;
+      gap: var(--space-sm);
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    section.quadrant {
+      background: var(--surface-muted);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-subtle);
+      padding: var(--space-md);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      min-height: 240px;
+    }
+
+    section.quadrant h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      letter-spacing: 0.02em;
+      border-bottom: 1px solid rgba(17, 24, 39, 0.1);
+      padding-bottom: 0.5rem;
+      color: var(--ink-primary);
+    }
+
+    section.quadrant[data-quadrant-key="important-urgent"] {
+      --quadrant-color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.28);
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(255, 255, 255, 0.94));
+    }
+
+    section.quadrant[data-quadrant-key="important-not-urgent"] {
+      --quadrant-color: #10b981;
+      border-color: rgba(16, 185, 129, 0.28);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(255, 255, 255, 0.94));
+    }
+
+    section.quadrant[data-quadrant-key="not-important-urgent"] {
+      --quadrant-color: #f97316;
+      border-color: rgba(249, 115, 22, 0.28);
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.12), rgba(255, 255, 255, 0.94));
+    }
+
+    section.quadrant[data-quadrant-key="not-important-not-urgent"] {
+      --quadrant-color: #6366f1;
+      border-color: rgba(99, 102, 241, 0.28);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(255, 255, 255, 0.94));
+    }
+
+    ul.task-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      flex: 1 1 auto;
+    }
+
+    .task-list.empty::before {
+      content: var(--empty-message, "아직 작업이 없습니다.");
+      font-size: 0.9rem;
+      color: var(--ink-muted);
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px dashed rgba(148, 163, 184, 0.4);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      display: block;
+      margin: 0.5rem;
+    }
+
+    .task-item {
+      padding: 0.85rem 1.1rem;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      line-height: 1.45;
+      word-break: break-word;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      cursor: grab;
+    }
+
+    .task-item .task-main {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      flex: 1 1 auto;
+    }
+
+    .task-item .task-title {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--ink-primary);
+    }
+
+    .task-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      font-size: 0.85rem;
+      color: var(--ink-muted);
+    }
+
+    .task-category {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: var(--radius-pill);
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.24);
+      font-weight: 500;
+      color: rgba(76, 78, 189, 0.95);
+    }
+
+    .task-due-date {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .task-due-date.overdue {
+      color: rgba(239, 68, 68, 0.9);
+      font-weight: 600;
+    }
+
+    .task-due-date.overdue::before {
+      content: '⚠️';
+      font-size: 0.85em;
+    }
+
+    .task-note {
+      margin: 0;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      color: rgba(15, 23, 42, 0.75);
+      background: rgba(15, 23, 42, 0.04);
+      border-radius: 10px;
+      padding: 0.5rem 0.65rem;
+    }
+
+    .task-complete-toggle {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      border: 2px solid rgba(99, 102, 241, 0.4);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .task-complete-toggle::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      background: transparent;
+      transition: background 0.15s ease;
+    }
+
+    .task-complete-toggle:checked {
+      border-color: rgba(16, 185, 129, 0.55);
+      background: rgba(16, 185, 129, 0.18);
+    }
+
+    .task-complete-toggle:checked::before {
+      background: #10b981;
+    }
+
+    .task-item.task-completed {
+      opacity: 0.75;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    .task-item.task-completed .task-title {
+      text-decoration: line-through;
+      color: rgba(15, 23, 42, 0.6);
+    }
+
+    .task-item.task-completed .task-note {
+      background: rgba(148, 163, 184, 0.12);
+      color: rgba(15, 23, 42, 0.6);
+    }
+
+    .completed-list .task-item {
+      cursor: default;
+    }
+
+    .task-item:active {
+      cursor: grabbing;
+    }
+
+    .task-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+    }
+
+    .task-item .task-content {
+      flex: 1 1 auto;
+    }
+
+    .task-item .task-actions {
+      display: inline-flex;
+      flex-shrink: 0;
+      gap: 0.5rem;
+    }
+
+    .task-actions button {
+      padding: 0.35rem 0.6rem;
+      font-size: 0.85rem;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: rgba(99, 102, 241, 0.08);
+      color: var(--ink-primary);
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .task-actions button:hover {
+      background: rgba(99, 102, 241, 0.18);
+      border-color: rgba(99, 102, 241, 0.32);
+    }
+
+    .task-actions button:focus-visible {
+      outline: 2px solid rgba(99, 102, 241, 0.58);
+      outline-offset: 2px;
+    }
+
+    .task-actions .task-action-delete {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.24);
+    }
+
+    .task-actions .task-action-delete:hover {
+      background: rgba(239, 68, 68, 0.18);
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .task-actions .task-action-delete:focus-visible {
+      outline-color: rgba(239, 68, 68, 0.6);
+    }
+
+    .task-item.dragging {
+      opacity: 0.55;
+      transform: scale(0.98);
+      box-shadow: none;
+    }
+
+    .task-list.drop-target {
+      border: 2px dashed var(--quadrant-color, var(--accent));
+      border-radius: 14px;
+      padding: 0.85rem;
+      min-height: 4rem;
+      transition: border-color 0.2s ease;
+    }
+
+    .task-item.editing {
+      cursor: text;
+      border-color: rgba(99, 102, 241, 0.4);
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    .task-item.editing .task-actions {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .task-edit-input {
+      width: 100%;
+      padding: 0.5rem 0.65rem;
+      border-radius: 10px;
+      border: 1px solid rgba(99, 102, 241, 0.45);
+      background: rgba(255, 255, 255, 0.9);
+      font-size: 0.95rem;
+      line-height: 1.4;
+      color: var(--ink-primary);
+      caret-color: var(--accent);
+    }
+
+    .task-edit-input:focus {
+      outline: 2px solid rgba(99, 102, 241, 0.4);
+      border-color: rgba(99, 102, 241, 0.55);
+    }
+
+    .task-inline-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      width: 100%;
+    }
+
+    .task-inline-form .inline-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.6rem;
+    }
+
+    .task-inline-form label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      font-size: 0.9rem;
+      color: var(--ink-muted);
+    }
+
+    .task-inline-form input[type="text"],
+    .task-inline-form input[type="date"],
+    .task-inline-form select,
+    .task-inline-form textarea {
+      padding: 0.6rem 0.75rem;
+      border-radius: 10px;
+      border: 1px solid rgba(99, 102, 241, 0.28);
+      font-size: 0.95rem;
+      color: var(--ink-primary);
+    }
+
+    .task-inline-form textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    .task-inline-form fieldset {
+      border: 1px solid rgba(99, 102, 241, 0.24);
+      border-radius: 12px;
+      padding: 0.65rem 0.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    .task-inline-form fieldset legend {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: rgba(76, 78, 189, 0.95);
+      padding: 0 0.35rem;
+    }
+
+    .task-inline-actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+    }
+
+    .task-inline-actions button {
+      padding: 0.55rem 1.05rem;
+      border-radius: var(--radius-pill);
+      border: none;
+      font-size: 0.9rem;
+      cursor: pointer;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      color: #fff;
+    }
+
+    .task-inline-actions .secondary {
+      background: rgba(148, 163, 184, 0.18);
+      color: rgba(15, 23, 42, 0.8);
+    }
+
+    .task-inline-actions .secondary:hover {
+      background: rgba(148, 163, 184, 0.28);
+    }
+
+    .task-inline-actions button:hover {
+      filter: brightness(1.05);
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: var(--space-md) var(--space-xs) calc(var(--space-lg) * 1.2);
+      }
+
+      button[type="submit"] {
+        width: 100%;
+      }
+
+      .field-row {
+        flex-direction: column;
+      }
+
+      .details-row {
+        grid-template-columns: 1fr;
+      }
+
+      .task-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .task-item .task-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+
+      main.matrix-container {
+        grid-template-columns: 1fr;
+      }
+
+      .completed-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    #toast-container {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      align-items: flex-end;
+    }
+
+    .toast {
+      background: rgba(17, 24, 39, 0.88);
+      color: #f8fafc;
+      padding: 0.85rem 1.25rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.2);
+      opacity: 0;
+      transform: translateX(100%);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(203, 213, 225, 0.16);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .task-actions .icon {
+      width: 1.1em;
+      height: 1.1em;
+      vertical-align: -0.15em;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <h1>아이젠하워 매트릭스</h1>
+      <p class="matrix-intro">아이젠하워 매트릭스는 업무를 중요도와 긴급도에 따라 네 구역으로 나누어 우선순위를 정하도록 돕는 도구입니다.</p>
+    </header>
+
+    <form id="task-form" aria-label="새 작업 추가">
+      <div class="field-row">
+        <label class="sr-only" for="task-input">작업 내용</label>
+        <input type="text" id="task-input" placeholder="새 작업 입력..." required>
+        <button type="submit">작업 추가</button>
+      </div>
+      <fieldset class="field-group">
+        <legend>분류</legend>
+        <label class="checkbox">
+          <input type="checkbox" id="urgent-check">
+          <span>긴급함</span>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" id="important-check">
+          <span>중요함</span>
+        </label>
+      </fieldset>
+      <div class="details-row">
+        <label class="input-group">
+          <span class="input-label">카테고리</span>
+          <select id="category-select" aria-label="작업 카테고리 선택">
+            <option value="">분류 없음</option>
+            <option value="업무">업무</option>
+            <option value="학습">학습</option>
+            <option value="개인">개인</option>
+            <option value="프로젝트">프로젝트</option>
+            <option value="기타">기타</option>
+          </select>
+        </label>
+        <label class="input-group">
+          <span class="input-label">마감일</span>
+          <input type="date" id="due-date-input" aria-label="작업 마감일">
+        </label>
+      </div>
+      <label class="input-group textarea-group">
+        <span class="input-label">메모</span>
+        <textarea id="note-input" rows="3" placeholder="추가 메모를 입력하세요..." aria-label="작업 메모"></textarea>
+      </label>
+    </form>
+
+    <main class="matrix-container">
+      <section class="quadrant" id="important-urgent" data-quadrant-key="important-urgent">
+        <h2>중요 &amp; 긴급</h2>
+        <ul class="task-list empty" id="q1-list" data-quadrant="q1"></ul>
+      </section>
+
+      <section class="quadrant" id="important-not-urgent" data-quadrant-key="important-not-urgent">
+        <h2>중요 &amp; 긴급하지 않음</h2>
+        <ul class="task-list empty" id="q2-list" data-quadrant="q2"></ul>
+      </section>
+
+      <section class="quadrant" id="not-important-urgent" data-quadrant-key="not-important-urgent">
+        <h2>중요하지 않음 &amp; 긴급</h2>
+        <ul class="task-list empty" id="q3-list" data-quadrant="q3"></ul>
+      </section>
+
+      <section class="quadrant" id="not-important-not-urgent" data-quadrant-key="not-important-not-urgent">
+        <h2>중요하지 않음 &amp; 긴급하지 않음</h2>
+        <ul class="task-list empty" id="q4-list" data-quadrant="q4"></ul>
+      </section>
+    </main>
+
+    <section class="completed-section" aria-label="완료된 작업">
+      <div class="completed-header">
+        <h2>완료된 작업</h2>
+        <button type="button" id="clear-completed" class="clear-completed">완료 항목 비우기</button>
+      </div>
+      <ul class="task-list empty completed-list" id="completed-list"></ul>
+    </section>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+    <symbol id="icon-edit" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+      <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+    </symbol>
+    <symbol id="icon-delete" viewBox="0 0 20 20" fill="currentColor">
+      <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+    </symbol>
+    <symbol id="icon-restore" viewBox="0 0 20 20" fill="currentColor">
+      <path fill-rule="evenodd" d="M7.707 3.293a1 1 0 010 1.414L5.414 7H11a7 7 0 017 7v2a1 1 0 11-2 0v-2A5 5 0 0011 9H5.414l2.293 2.293a1 1 0 11-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+    </symbol>
+  </svg>
+
+  <script>
+    (() => {
+      const STORAGE_KEY = 'eisenhower-matrix-tasks-v1';
+
+      const uuid = () => {
+        if (window.crypto?.randomUUID) {
+          return crypto.randomUUID();
+        }
+        return `task-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+      };
+
+      const elements = {
+        form: document.getElementById('task-form'),
+        input: document.getElementById('task-input'),
+        urgent: document.getElementById('urgent-check'),
+        important: document.getElementById('important-check'),
+        category: document.getElementById('category-select'),
+        dueDate: document.getElementById('due-date-input'),
+        note: document.getElementById('note-input'),
+        lists: {
+          q1: document.getElementById('q1-list'),
+          q2: document.getElementById('q2-list'),
+          q3: document.getElementById('q3-list'),
+          q4: document.getElementById('q4-list')
+        },
+        completedList: document.getElementById('completed-list'),
+        clearCompleted: document.getElementById('clear-completed')
+      };
+
+      const categoryOptions = Array.from(elements.category.options).map((option) => ({
+        value: option.value,
+        label: option.textContent
+      }));
+
+      const quadrantFlags = {
+        q1: { important: true, urgent: true },
+        q2: { important: true, urgent: false },
+        q3: { important: false, urgent: true },
+        q4: { important: false, urgent: false }
+      };
+
+      const quadrantDescriptions = {
+        q1: '긴급하고 중요한 일들입니다. 즉시 처리하세요.',
+        q2: '중요하지만 긴급하지 않은 일들입니다. 계획을 세워 처리하세요.',
+        q3: '긴급하지만 중요하지 않은 일들입니다. 다른 사람에게 위임하거나 최소한의 시간으로 처리하세요.',
+        q4: '긴급하지도 중요하지도 않은 일들입니다. 나중에 하거나 제거하세요.'
+      };
+
+      const state = {
+        tasks: loadTasks(),
+        draggedTaskId: null,
+        dragOriginQuadrant: null,
+        editingId: null
+      };
+
+      const showToast = (message) => {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        container.append(toast);
+
+        requestAnimationFrame(() => {
+          toast.classList.add('show');
+        });
+
+        setTimeout(() => {
+          toast.classList.remove('show');
+          toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+        }, 3000);
+      };
+
+      function loadTasks() {
+        const fallback = [];
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return fallback;
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) return fallback;
+          return parsed.map((task) => ({
+            id: task.id || uuid(),
+            title: task.title?.toString()?.trim() ?? '',
+            important: Boolean(task.important),
+            urgent: Boolean(task.urgent),
+            category: task.category ?? '',
+            dueDate: task.dueDate ?? '',
+            note: task.note ?? '',
+            completed: Boolean(task.completed),
+            order: Number.isFinite(task.order) ? task.order : 0,
+            createdAt: Number.isFinite(task.createdAt) ? task.createdAt : Date.now(),
+            completedAt: Number.isFinite(task.completedAt) ? task.completedAt : undefined
+          }));
+        } catch (error) {
+          console.error('로컬 스토리지에서 작업을 불러오는 데 실패했습니다.', error);
+          return fallback;
+        }
+      }
+
+      const saveTasks = () => {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.tasks));
+        } catch (error) {
+          console.error('작업을 저장하는 중 오류가 발생했습니다.', error);
+        }
+      };
+
+      const commit = () => {
+        saveTasks();
+        render();
+      };
+
+      const resolveQuadrantKey = (important, urgent) => {
+        if (important && urgent) return 'q1';
+        if (important) return 'q2';
+        if (urgent) return 'q3';
+        return 'q4';
+      };
+
+      const getQuadrantKey = (task) => resolveQuadrantKey(task.important, task.urgent);
+
+      const getNextOrder = (quadrantKey) => {
+        const tasks = state.tasks.filter(
+          (task) => !task.completed && getQuadrantKey(task) === quadrantKey
+        );
+        if (!tasks.length) return 0;
+        const maxOrder = Math.max(
+          ...tasks.map((task) => (Number.isFinite(task.order) ? task.order : 0))
+        );
+        return maxOrder + 1;
+      };
+
+      const getTasksForQuadrant = (quadrantKey) =>
+        state.tasks
+          .filter((task) => !task.completed && getQuadrantKey(task) === quadrantKey)
+          .sort((a, b) => {
+            const orderA = Number.isFinite(a.order) ? a.order : 0;
+            const orderB = Number.isFinite(b.order) ? b.order : 0;
+            if (orderA !== orderB) return orderA - orderB;
+            return (a.createdAt ?? 0) - (b.createdAt ?? 0);
+          });
+
+      const formatDate = (value) => {
+        if (!value) return '';
+        let date;
+        if (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          date = new Date(value + 'T00:00:00');
+        } else {
+          date = new Date(value);
+        }
+        if (Number.isNaN(date.getTime())) return value;
+        return new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).format(date);
+      };
+
+      const isOverdue = (dueDate) => {
+        if (!dueDate) return false;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        let date;
+        if (typeof dueDate === 'string' && dueDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          date = new Date(dueDate + 'T00:00:00');
+        } else {
+          date = new Date(dueDate);
+        }
+        if (Number.isNaN(date.getTime())) return false;
+        date.setHours(0, 0, 0, 0);
+        return date < today;
+      };
+
+      function render() {
+        clearDropTargets();
+        Object.entries(elements.lists).forEach(([key, listElement]) => {
+          renderList(listElement, getTasksForQuadrant(key));
+        });
+        renderCompletedList();
+      }
+
+      function renderList(listElement, tasks) {
+        listElement.innerHTML = '';
+        tasks.forEach((task) => {
+          const item = renderTaskItem(task);
+          listElement.append(item);
+        });
+        if (tasks.length === 0) {
+          listElement.classList.add('empty');
+          const quadrantKey = listElement.dataset.quadrant;
+          const description = quadrantDescriptions[quadrantKey] || '아직 작업이 없습니다.';
+          listElement.style.setProperty('--empty-message', `"${description}"`);
+        } else {
+          listElement.classList.remove('empty');
+        }
+      }
+
+      function renderCompletedList() {
+        const completedTasks = state.tasks
+          .filter((task) => task.completed)
+          .sort((a, b) => {
+            const timeDiff = (b.completedAt ?? 0) - (a.completedAt ?? 0);
+            if (timeDiff !== 0) return timeDiff;
+            return (b.createdAt ?? 0) - (a.createdAt ?? 0);
+          });
+
+        elements.completedList.innerHTML = '';
+        completedTasks.forEach((task) => {
+          const item = renderTaskItem(task);
+          item.draggable = false;
+          elements.completedList.append(item);
+        });
+
+        const isEmpty = completedTasks.length === 0;
+        elements.completedList.classList.toggle('empty', isEmpty);
+        elements.clearCompleted.disabled = isEmpty;
+      }
+
+      function renderTaskItem(task) {
+        const item = document.createElement('li');
+        item.className = 'task-item';
+        item.dataset.taskId = task.id;
+
+        if (task.completed) {
+          item.classList.add('task-completed');
+        }
+
+        if (state.editingId === task.id) {
+          item.classList.add('editing');
+          item.append(createInlineEditForm(task));
+          return item;
+        }
+
+        if (!task.completed) {
+          item.draggable = true;
+          item.addEventListener('dragstart', handleDragStart);
+          item.addEventListener('dragend', handleDragEnd);
+        }
+
+        const toggle = document.createElement('input');
+        toggle.type = 'checkbox';
+        toggle.className = 'task-complete-toggle';
+        toggle.checked = task.completed;
+        toggle.setAttribute('aria-label', task.completed ? `'${task.title}' 작업 완료 해제` : `'${task.title}' 작업 완료`);
+        toggle.addEventListener('change', () => toggleCompletion(task.id, toggle.checked));
+
+        const main = document.createElement('div');
+        main.className = 'task-main';
+
+        const title = document.createElement('span');
+        title.className = 'task-title';
+        title.textContent = task.title || '이름 없는 작업';
+        main.append(title);
+
+        const meta = document.createElement('div');
+        meta.className = 'task-meta';
+
+        if (task.category) {
+          const category = document.createElement('span');
+          category.className = 'task-category';
+          category.textContent = task.category;
+          meta.append(category);
+        }
+
+        if (task.dueDate) {
+          const due = document.createElement('span');
+          due.className = 'task-due-date';
+          if (isOverdue(task.dueDate) && !task.completed) {
+            due.classList.add('overdue');
+          }
+          due.textContent = `마감 ${formatDate(task.dueDate)}`;
+          meta.append(due);
+        }
+
+        if (meta.children.length) {
+          main.append(meta);
+        }
+
+        if (task.note) {
+          const note = document.createElement('p');
+          note.className = 'task-note';
+          note.textContent = task.note;
+          main.append(note);
+        }
+
+        const actions = document.createElement('span');
+        actions.className = 'task-actions';
+
+        if (!task.completed) {
+          const editButton = document.createElement('button');
+          editButton.type = 'button';
+          editButton.className = 'task-action task-action-edit';
+          editButton.setAttribute('aria-label', `'${task.title}' 작업 편집`);
+          editButton.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#icon-edit"></use></svg> <span>편집</span>`;
+          editButton.addEventListener('click', () => startEditing(task.id));
+          actions.append(editButton);
+        } else {
+          const restoreButton = document.createElement('button');
+          restoreButton.type = 'button';
+          restoreButton.className = 'task-action task-action-restore';
+          restoreButton.setAttribute('aria-label', `'${task.title}' 작업 복원`);
+          restoreButton.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#icon-restore"></use></svg> <span>복원</span>`;
+          restoreButton.addEventListener('click', () => toggleCompletion(task.id, false));
+          actions.append(restoreButton);
+        }
+
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'task-action task-action-delete';
+        deleteButton.setAttribute('aria-label', `'${task.title}' 작업 삭제`);
+        deleteButton.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#icon-delete"></use></svg> <span>삭제</span>`;
+        deleteButton.addEventListener('click', () => deleteTask(task.id));
+        actions.append(deleteButton);
+
+        item.append(toggle, main, actions);
+        return item;
+      }
+
+      function createInlineEditForm(task) {
+        const form = document.createElement('form');
+        form.className = 'task-inline-form';
+
+        const titleLabel = document.createElement('label');
+        titleLabel.textContent = '작업 내용';
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.required = true;
+        titleInput.value = task.title;
+        titleLabel.append(titleInput);
+        form.append(titleLabel);
+
+        const inlineRow = document.createElement('div');
+        inlineRow.className = 'inline-row';
+
+        const categoryLabel = document.createElement('label');
+        categoryLabel.textContent = '카테고리';
+        const categorySelect = document.createElement('select');
+        categoryOptions.forEach(({ value, label }) => {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = label;
+          if (value === task.category) {
+            option.selected = true;
+          }
+          categorySelect.append(option);
+        });
+        categoryLabel.append(categorySelect);
+        inlineRow.append(categoryLabel);
+
+        const dueLabel = document.createElement('label');
+        dueLabel.textContent = '마감일';
+        const dueInput = document.createElement('input');
+        dueInput.type = 'date';
+        dueInput.value = task.dueDate || '';
+        dueLabel.append(dueInput);
+        inlineRow.append(dueLabel);
+
+        form.append(inlineRow);
+
+        const noteLabel = document.createElement('label');
+        noteLabel.textContent = '메모';
+        const noteTextarea = document.createElement('textarea');
+        noteTextarea.value = task.note || '';
+        noteLabel.append(noteTextarea);
+        form.append(noteLabel);
+
+        const priorityFieldset = document.createElement('fieldset');
+        const legend = document.createElement('legend');
+        legend.textContent = '중요/긴급 설정';
+        priorityFieldset.append(legend);
+
+        const importantLabel = document.createElement('label');
+        importantLabel.className = 'checkbox';
+        const importantCheckbox = document.createElement('input');
+        importantCheckbox.type = 'checkbox';
+        importantCheckbox.checked = task.important;
+        const importantText = document.createElement('span');
+        importantText.textContent = '중요함';
+        importantLabel.append(importantCheckbox, importantText);
+
+        const urgentLabel = document.createElement('label');
+        urgentLabel.className = 'checkbox';
+        const urgentCheckbox = document.createElement('input');
+        urgentCheckbox.type = 'checkbox';
+        urgentCheckbox.checked = task.urgent;
+        const urgentText = document.createElement('span');
+        urgentText.textContent = '긴급함';
+        urgentLabel.append(urgentCheckbox, urgentText);
+
+        priorityFieldset.append(importantLabel, urgentLabel);
+        form.append(priorityFieldset);
+
+        const actions = document.createElement('div');
+        actions.className = 'task-inline-actions';
+
+        const cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.className = 'secondary';
+        cancelButton.textContent = '취소';
+        cancelButton.addEventListener('click', () => cancelEditing());
+        actions.append(cancelButton);
+
+        const saveButton = document.createElement('button');
+        saveButton.type = 'submit';
+        saveButton.textContent = '저장';
+        actions.append(saveButton);
+
+        form.append(actions);
+
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const nextTitle = titleInput.value.trim();
+          if (!nextTitle) {
+            titleInput.focus();
+            return;
+          }
+
+          const updates = {
+            title: nextTitle,
+            category: categorySelect.value,
+            dueDate: dueInput.value,
+            note: noteTextarea.value.trim(),
+            important: importantCheckbox.checked,
+            urgent: urgentCheckbox.checked
+          };
+
+          state.editingId = null;
+          updateTask(task.id, updates);
+        });
+
+        form.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            cancelEditing();
+          }
+        });
+
+        requestAnimationFrame(() => titleInput.focus());
+
+        return form;
+      }
+
+      const resetForm = () => {
+        elements.input.value = '';
+        elements.urgent.checked = false;
+        elements.important.checked = false;
+        elements.category.value = '';
+        elements.dueDate.value = '';
+        elements.note.value = '';
+        elements.input.focus();
+      };
+
+      const handleFormSubmit = (event) => {
+        event.preventDefault();
+        addTask();
+      };
+
+      function addTask() {
+        const title = elements.input.value.trim();
+        if (!title) {
+          elements.input.focus();
+          return;
+        }
+
+        const important = elements.important.checked;
+        const urgent = elements.urgent.checked;
+        const quadrantKey = resolveQuadrantKey(important, urgent);
+        const task = {
+          id: uuid(),
+          title,
+          important,
+          urgent,
+          category: elements.category.value,
+          dueDate: elements.dueDate.value,
+          note: elements.note.value.trim(),
+          completed: false,
+          order: getNextOrder(quadrantKey),
+          createdAt: Date.now()
+        };
+
+        state.tasks.push(task);
+        resetForm();
+        commit();
+        showToast(`'${task.title}' 작업이 추가되었습니다.`);
+      }
+
+      function toggleCompletion(taskId, completed) {
+        const task = state.tasks.find((item) => item.id === taskId);
+        if (!task) return;
+
+        const quadrantKey = getQuadrantKey(task);
+        if (state.editingId === taskId) {
+          state.editingId = null;
+        }
+
+        task.completed = completed;
+
+        if (completed) {
+          task.completedAt = Date.now();
+          reindexQuadrant(quadrantKey);
+          showToast(`'${task.title}' 작업을 완료했습니다.`);
+        } else {
+          task.completedAt = undefined;
+          task.order = getNextOrder(quadrantKey);
+          showToast(`'${task.title}' 작업을 복원했습니다.`);
+        }
+
+        commit();
+      }
+
+      function deleteTask(taskId) {
+        const task = state.tasks.find((item) => item.id === taskId);
+        if (!task) return;
+
+        state.tasks = state.tasks.filter((item) => item.id !== taskId);
+
+        if (!task.completed) {
+          reindexQuadrant(getQuadrantKey(task));
+        }
+
+        if (state.draggedTaskId === taskId) {
+          state.draggedTaskId = null;
+        }
+        if (state.editingId === taskId) {
+          state.editingId = null;
+        }
+
+        commit();
+        showToast(`'${task.title}' 작업이 삭제되었습니다.`);
+      }
+
+      function updateTask(taskId, updates) {
+        const task = state.tasks.find((item) => item.id === taskId);
+        if (!task) return;
+
+        const previousQuadrant = getQuadrantKey(task);
+
+        task.title = updates.title;
+        task.category = updates.category;
+        task.dueDate = updates.dueDate;
+        task.note = updates.note;
+        task.important = updates.important;
+        task.urgent = updates.urgent;
+
+        if (!task.completed) {
+          const nextQuadrant = getQuadrantKey(task);
+          if (previousQuadrant !== nextQuadrant) {
+            task.order = getNextOrder(nextQuadrant);
+            reindexQuadrant(previousQuadrant);
+            reindexQuadrant(nextQuadrant);
+          }
+        }
+
+        commit();
+        showToast(`'${task.title}' 작업이 수정되었습니다.`);
+      }
+
+      function startEditing(taskId) {
+        state.editingId = taskId;
+        render();
+      }
+
+      function cancelEditing() {
+        if (state.editingId) {
+          state.editingId = null;
+          render();
+        }
+      }
+
+      function clearCompletedTasks() {
+        const hadCompleted = state.tasks.some((task) => task.completed);
+        if (!hadCompleted) return;
+        state.tasks = state.tasks.filter((task) => !task.completed);
+        commit();
+      }
+
+      function handleClearCompleted() {
+        if (elements.clearCompleted.disabled) return;
+        const confirmed = window.confirm('완료된 작업을 모두 삭제할까요?');
+        if (!confirmed) return;
+        clearCompletedTasks();
+      }
+
+      function findInsertBeforeNode(listElement, pointerY) {
+        const siblings = Array.from(
+          listElement.querySelectorAll('.task-item:not(.editing)')
+        );
+        return siblings.find((sibling) => {
+          const rect = sibling.getBoundingClientRect();
+          return pointerY < rect.top + rect.height / 2;
+        }) || null;
+      }
+
+      function handleDragStart(event) {
+        const item = event.currentTarget;
+        state.draggedTaskId = item.dataset.taskId ?? null;
+        state.dragOriginQuadrant = item.parentElement?.dataset.quadrant ?? null;
+        item.classList.add('dragging');
+        if (event.dataTransfer) {
+          event.dataTransfer.effectAllowed = 'move';
+          event.dataTransfer.setData('text/plain', state.draggedTaskId ?? '');
+        }
+      }
+
+      function handleDragEnd(event) {
+        event.currentTarget.classList.remove('dragging');
+        state.draggedTaskId = null;
+        state.dragOriginQuadrant = null;
+        clearDropTargets();
+      }
+
+      function handleDragEnter(event) {
+        if (!state.draggedTaskId) return;
+        event.currentTarget.classList.add('drop-target');
+      }
+
+      function handleDragLeave(event) {
+        if (!state.draggedTaskId) return;
+        const list = event.currentTarget;
+        if (event.relatedTarget && list.contains(event.relatedTarget)) {
+          return;
+        }
+        list.classList.remove('drop-target');
+      }
+
+      function handleDragOver(event) {
+        if (!state.draggedTaskId) return;
+        event.preventDefault();
+        if (event.dataTransfer) {
+          event.dataTransfer.dropEffect = 'move';
+        }
+      }
+
+      function handleDrop(event) {
+        if (!state.draggedTaskId) return;
+        event.preventDefault();
+        event.stopPropagation();
+
+        const list = event.currentTarget;
+        const quadrantKey = list.dataset.quadrant;
+        if (!quadrantFlags[quadrantKey] || !quadrantKey) {
+          clearDropTargets();
+          return;
+        }
+
+        const task = state.tasks.find((item) => item.id === state.draggedTaskId);
+        if (!task) {
+          clearDropTargets();
+          return;
+        }
+
+        const draggedElement = document.querySelector('.task-item.dragging');
+        if (draggedElement) {
+          const insertBefore = findInsertBeforeNode(list, event.clientY);
+          if (insertBefore) {
+            list.insertBefore(draggedElement, insertBefore);
+          } else {
+            list.append(draggedElement);
+          }
+        }
+
+        const orderedIds = Array.from(list.querySelectorAll('.task-item'))
+          .map((item) => item.dataset.taskId)
+          .filter(Boolean);
+
+        moveTaskToQuadrant(state.draggedTaskId, quadrantKey, orderedIds);
+
+        if (draggedElement) {
+          draggedElement.classList.remove('dragging');
+        }
+        clearDropTargets();
+      }
+
+      function clearDropTargets() {
+        Object.values(elements.lists).forEach((list) => {
+          list.classList.remove('drop-target');
+        });
+      }
+
+      function moveTaskToQuadrant(taskId, quadrantKey, orderedIds) {
+        const flags = quadrantFlags[quadrantKey];
+        const task = state.tasks.find((item) => item.id === taskId);
+        if (!flags || !task) return;
+
+        const previousQuadrant = getQuadrantKey(task);
+
+        Object.assign(task, flags);
+        task.completed = false;
+        task.completedAt = undefined;
+
+        orderedIds.forEach((id, index) => {
+          const target = state.tasks.find((item) => item.id === id);
+          if (target) {
+            target.order = index;
+          }
+        });
+
+        if (previousQuadrant && previousQuadrant !== quadrantKey) {
+          reindexQuadrant(previousQuadrant);
+        }
+
+        reindexQuadrant(quadrantKey);
+        commit();
+      }
+
+      function reindexQuadrant(quadrantKey) {
+        const tasks = state.tasks
+          .filter((task) => !task.completed && getQuadrantKey(task) === quadrantKey)
+          .sort((a, b) => {
+            const orderA = Number.isFinite(a.order) ? a.order : 0;
+            const orderB = Number.isFinite(b.order) ? b.order : 0;
+            if (orderA !== orderB) return orderA - orderB;
+            return (a.createdAt ?? 0) - (b.createdAt ?? 0);
+          });
+
+        tasks.forEach((task, index) => {
+          task.order = index;
+        });
+      }
+
+      function normalizeOrders() {
+        ['q1', 'q2', 'q3', 'q4'].forEach(reindexQuadrant);
+      }
+
+      function bindEvents() {
+        elements.form.addEventListener('submit', handleFormSubmit);
+        Object.values(elements.lists).forEach((list) => {
+          list.addEventListener('dragenter', handleDragEnter);
+          list.addEventListener('dragleave', handleDragLeave);
+          list.addEventListener('dragover', handleDragOver);
+          list.addEventListener('drop', handleDrop);
+        });
+        elements.clearCompleted.addEventListener('click', handleClearCompleted);
+      }
+
+      normalizeOrders();
+      bindEvents();
+      render();
+      resetForm();
+    })();
+  </script>
+</body>
+</html>
+
